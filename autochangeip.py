@@ -6,6 +6,7 @@ import socket
 import shlex
 import ctypes
 import sys
+import platform
 
 
 def is_admin():
@@ -51,7 +52,12 @@ if is_admin():
     lines = out_p_inter.splitlines()
     my_line = lines[3]
     my_word = my_line.split(" ")
-    net_int = my_word[22]
+
+    # XP has network interface name in different location then Win10
+    if platform.release() == 'XP':
+        net_int = my_word[31] + ' ' + my_word[32] + ' ' + my_word[33]
+    else:
+        net_int = my_word[22]
 
     hostname = socket.gethostname()
     ip = socket.gethostbyname(hostname)
@@ -60,16 +66,21 @@ if is_admin():
     ip_list = ip.split('.')
     ip_network = ip_list[2]
 
-    print('net_int: {}'.format(net_int))
-    print('ip: {}'.format(ip))
-    print('ip_list: {}'.format(ip_list))
-    print('ip_network: {}'.format(ip_network))
+    # print for debug
+    # print('OS: {}'.format(platform.release()))
+    # print('lines: {}'.format(lines))
+    # print('my_line: {}'.format(my_line))
+    # print('my_word: {}'.format(my_word))
+    # print('net_int: {}'.format(net_int))
+    # print('ip: {}'.format(ip))
+    # print('ip_list: {}'.format(ip_list))
+    # print('ip_network: {}'.format(ip_network))
 
 
     # cmd_change_ip = ['netEsh', 'interface', 'ip', 'set', 'address',
     #                 net_int, 'static', '192.168.0.3', '255.255.255.0', '192.168.0.251', '1']
 
-    cmd_change_ip_raw = 'netsh interface ip set address' + ' ' + net_int + ' ' + \
+    cmd_change_ip_raw = 'netsh interface ip set address' + ' ' + 'name="' + net_int + '" ' + \
                         'static 192.168.' + ip_network + '.2' + ' ' + '255.255.255.0 192.168.0.251 1'
     cmd_change_ip = shlex.split(cmd_change_ip_raw)
 
