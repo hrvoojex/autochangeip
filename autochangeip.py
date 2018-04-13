@@ -76,22 +76,30 @@ if is_admin():
     # print('ip_list: {}'.format(ip_list))
     # print('ip_network: {}'.format(ip_network))
 
-
     # cmd_change_ip = ['netEsh', 'interface', 'ip', 'set', 'address',
     #                 net_int, 'static', '192.168.0.3', '255.255.255.0', '192.168.0.251', '1']
 
     cmd_change_ip_raw = 'netsh interface ip set address' + ' ' + 'name="' + net_int + '" ' + \
                         'static 192.168.' + ip_network + '.2' + ' ' + '255.255.255.0 192.168.0.251 1'
+    cmd_change_dns_raw = 'netsh interface ipv4 add dnsserver "' + net_int + '" address=8.8.8.8 index=1'
+
     cmd_change_ip = shlex.split(cmd_change_ip_raw)
+    cmd_change_dns = shlex.split(cmd_change_dns_raw)
 
     sp = subprocess.Popen(cmd_change_ip, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    sp2 = subprocess.Popen(cmd_change_dns, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     out, err = sp.communicate()
+    out2, err2 = sp2.communicate()
+
     print(out, err, sp.returncode)
+    print(out2, err2, sp2.returncode)
+
     input("Enter for end")
+
 else:
     # Re-run the program with admin rights
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, sys.argv[0], None, 1)
-
 
 
 
