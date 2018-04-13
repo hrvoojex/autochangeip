@@ -7,7 +7,7 @@ import shlex
 import ctypes
 import sys
 import platform
-import re
+
 
 def is_admin():
     """Check if user has admin rights in Windows"""
@@ -15,6 +15,12 @@ def is_admin():
         return ctypes.windll.shell32.IsUserAnAdmin()
     except:
         return False
+
+if len(sys.argv) > 1:
+    clientIP = sys.argv[1]
+else:
+    print("Pogresan IP broj. Mora biti izmedu 2-254")
+    sys.exit()
 
 
 if is_admin():
@@ -28,9 +34,9 @@ if is_admin():
         if ipconfigErr != "" and ipconfigPro.returncode != 0:
             print(ipconfigOut, ipconfigErr, ipconfigPro.returncode)
 
-        with open('autochangeip2.txt', 'wb') as fh:
+        with open('autochangeip2.log', 'wb') as fh:
             fh.write(ipconfigOut)
-            print("Upisano u file autochangeip2.txt")
+            print("Upisano u file autochangeip2.log")
 
         # print that string of bytes as text on screen
         #ipconfigOutText = ipconfigOut.decode('utf-8')
@@ -42,7 +48,7 @@ if is_admin():
         myIP = socket.gethostbyname(socket.gethostname())
         # myNetwork, if network is 192.168.100.0, than myNetwork is 100
         myNetwork = myIP.split(".")[2]
-        with open('autochangeip2.txt', 'r') as f:
+        with open('autochangeip2.log', 'r') as f:
             for line in f:
                 if line.startswith("Ethernet adapter"):
                     line = line.split(" ")
@@ -67,31 +73,29 @@ if is_admin():
         print("Default gateway: {}".format(defaultGateway))
         print("Interface name: {}".format(interfaceName))
 
-        # changeIP = 'netsh interface ip set address' + ' ' + 'name="' + interfaceName + '" ' + \
-        #                     'static 192.168.' + myNetwork + '.2' + ' ' + '255.255.255.0 192.168.0.251 1'
-        # changeDNS = 'netsh interface ipv4 add dnsserver "' + interfaceName + '" address=8.8.8.8 index=1'
-        #
-        # if platform.release() == 'XP':
-        #     #set address name="Local Area Connection" source=static addr=[IP Address] mask=255.255.255.0
-        #     #set address name="Local Area Connection" gateway=[GW IP Address] gwmetric=0
-        #     #netsh interface ip set dns "Local Area Connection" static 192.168.0.2
-        # else:
-        #     pass
-        #
-        # # shlex prepare command for Popen like it is written in Windows cmd
-        # changeIPshlex = shlex.split(changeIP)
-        # changeDNSshlex = shlex.split(changeDNS)
-        #
-        # subprocessIP = subprocess.Popen(changeIPshlex, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # subprocessDNS = subprocess.Popen(changeDNSshlex, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        #
-        # # subprocess.comunicate() returns a tuple of stdout and stderr
-        # outIP, errIP = subprocessIP.communicate()
-        # outDNS, errDNS = subprocessDNS.communicate()
-        #
-        # # returncode is 0 if everything is ok
-        # print(outIP, errIP, subprocessIP.returncode)
-        # print(outDNS, errDNS, subprocessDNS.returncode)
+        changeIP = 'netsh interface ip set address' + ' ' + 'name="' + interfaceName + '" ' + \
+                    'static 192.168.' + myNetwork + '.' + clientIP + ' ' + '255.255.255.0 ' + defaultGateway + ' 1'
+        changeDNS = 'netsh interface ipv4 add dnsserver "' + interfaceName + '" address=' + defaultGateway + ' index=1'
+
+        if platform.release() == 'XP':
+            # set address name="Local Area Connection" source=static addr=[IP Address] mask=255.255.255.0
+            # set address name="Local Area Connection" gateway=[GW IP Address] gwmetric=0
+            changeDNS = 'netsh interface ip set dns "' + interfaceName + '" static ' + defaultGateway
+
+        # shlex prepare command for Popen like it is written in Windows cmd
+        changeIPshlex = shlex.split(changeIP)
+        changeDNSshlex = shlex.split(changeDNS)
+
+        subprocessIP = subprocess.Popen(changeIPshlex, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocessDNS = subprocess.Popen(changeDNSshlex, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # subprocess.comunicate() returns a tuple of stdout and stderr
+        outIP, errIP = subprocessIP.communicate()
+        outDNS, errDNS = subprocessDNS.communicate()
+
+        # returncode is 0 if everything is ok
+        print(outIP, errIP, subprocessIP.returncode)
+        print(outDNS, errDNS, subprocessDNS.returncode)
 
 
     except Exception as e:
