@@ -72,7 +72,9 @@ if is_admin():
         # changeDNS = 'netsh interface ipv4 add dnsserver "' + interfaceName + '" address=8.8.8.8 index=1'
         #
         # if platform.release() == 'XP':
-        #     pass
+        #     #set address name="Local Area Connection" source=static addr=[IP Address] mask=255.255.255.0
+        #     #set address name="Local Area Connection" gateway=[GW IP Address] gwmetric=0
+        #     #netsh interface ip set dns "Local Area Connection" static 192.168.0.2
         # else:
         #     pass
         #
